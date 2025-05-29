@@ -28,6 +28,8 @@ import type { NextPageWithLayout } from "../_app";
 import { api } from "@/utils/api";
 
 const CategoriesPage: NextPageWithLayout = () => {
+  const apiUtils = api.useUtils();
+
   const [createCategoryDialogOpen, setCreateCategoryDialogOpen] =
     useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
@@ -42,10 +44,25 @@ const CategoriesPage: NextPageWithLayout = () => {
   });
 
   //get categories
-  const { data: categories, isLoading } = api.category.getCategories.useQuery();
+  const { data: categories, isLoading: categoryIsLoading } =
+    api.category.getCategories.useQuery();
+  //add category
+  const { mutate: createCategory } = api.category.createCategory.useMutation({
+    onSuccess: async () => {
+      await apiUtils.category.getCategories.invalidate(); //show new data at view
+
+      alert("Successfully created a new category"); //add alert success
+      setCreateCategoryDialogOpen(false); //close modal form add
+      createCategoryForm.reset(); //remove value input at form
+    },
+  });
 
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
-    console.log(data);
+    // console.log(data);
+    // alert(data.name);
+    createCategory({
+      name: data.name,
+    });
   };
 
   const handleSubmitEditCategory = (data: CategoryFormSchema) => {
@@ -86,6 +103,8 @@ const CategoriesPage: NextPageWithLayout = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Add New Category</AlertDialogTitle>
               </AlertDialogHeader>
+
+              {/* form add catergory  */}
               <Form {...createCategoryForm}>
                 <CategoryForm
                   onSubmit={handleSubmitCreateCategory}
