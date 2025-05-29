@@ -19,4 +19,18 @@ model Category{
     productCount Int @default(0)
     createAt DateTime @default(now())
     updateAt DateTime @updatedAt
+    product Product[]
+}
+model Product{
+    id String @id @default(uuid())
+
+    name String
+    price Int @default(0)
+    imageUrl String?
+
+    category Category @relation(fields: [categoryId], references: [id])
+    categoryId String
+
+    createAt DateTime @default(now())
+    updateAt DateTime @updatedAt
 }

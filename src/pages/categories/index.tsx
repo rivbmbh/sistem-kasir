@@ -73,7 +73,7 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: editCategory } = api.category.editCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate(); //show new data at view
-
+-
       alert("Successfully updated a category"); //add alert success
       editCategoryForm.reset();
       setCategoryToEdit(null);
