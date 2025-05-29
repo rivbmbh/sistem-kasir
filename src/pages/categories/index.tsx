@@ -34,6 +34,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [categoryToEdit, setCategoryToEdit] = useState<string | null>(null);
 
   const createCategoryForm = useForm<CategoryFormSchema>({
     resolver: zodResolver(categoryFormSchema),
@@ -69,6 +70,17 @@ const CategoriesPage: NextPageWithLayout = () => {
       },
     });
 
+  const { mutate: editCategory } = api.category.editCategory.useMutation({
+    onSuccess: async () => {
+      await apiUtils.category.getCategories.invalidate(); //show new data at view
+
+      alert("Successfully updated a category"); //add alert success
+      editCategoryForm.reset();
+      setCategoryToEdit(null);
+      setEditCategoryDialogOpen(false);
+    },
+  });
+
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
     // console.log(data);
     // alert(data.name);
@@ -78,12 +90,16 @@ const CategoriesPage: NextPageWithLayout = () => {
   };
 
   const handleSubmitEditCategory = (data: CategoryFormSchema) => {
-    console.log(data);
+    if (!categoryToEdit) return;
+    editCategory({
+      name: data.name,
+      categoryId: categoryToEdit,
+    });
   };
 
-  const handleClickEditCategory = (category: Category) => {
+  const handleClickEditCategory = (category: { id: string; name: string }) => {
     setEditCategoryDialogOpen(true);
-
+    setCategoryToEdit(category.id);
     editCategoryForm.reset({
       name: category.name,
     });
@@ -153,6 +169,12 @@ const CategoriesPage: NextPageWithLayout = () => {
               name={category.name}
               productCount={category.productCount}
               onDelete={() => handleClickDeleteCategory(category.id)}
+              onEdit={() =>
+                handleClickEditCategory({
+                  id: category.id,
+                  name: category.name,
+                })
+              }
             />
           );
         })}

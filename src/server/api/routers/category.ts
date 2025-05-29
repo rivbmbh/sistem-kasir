@@ -19,7 +19,7 @@ export const categoryRouter = createTRPCRouter({
   createCategory: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(3, "Minimun 3 of characters"),
+        name: z.string().min(3, "Minimun 3 of character"),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -40,6 +40,26 @@ export const categoryRouter = createTRPCRouter({
       await db.category.delete({
         where: {
           id: input.categoryId,
+        },
+      });
+    }),
+
+  //update
+  editCategory: protectedProcedure
+    .input(
+      z.object({
+        categoryId: z.string(),
+        name: z.string().min(3, "Minimun of 3 character"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+      await db.category.update({
+        where: {
+          id: input.categoryId,
+        },
+        data: {
+          name: input.name,
         },
       });
     }),
