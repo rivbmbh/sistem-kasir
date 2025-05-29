@@ -46,6 +46,7 @@ const CategoriesPage: NextPageWithLayout = () => {
   //get categories
   const { data: categories, isLoading: categoryIsLoading } =
     api.category.getCategories.useQuery();
+
   //add category
   const { mutate: createCategory } = api.category.createCategory.useMutation({
     onSuccess: async () => {
@@ -56,6 +57,17 @@ const CategoriesPage: NextPageWithLayout = () => {
       createCategoryForm.reset(); //remove value input at form
     },
   });
+
+  //delete category
+  const { mutate: deleteCategoryById } =
+    api.category.deleteCategoryById.useMutation({
+      onSuccess: async () => {
+        await apiUtils.category.getCategories.invalidate(); //show new data at view
+
+        alert("Successfully deleted a category"); //add alert success
+        setCategoryToDelete(null); //close modal form add
+      },
+    });
 
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
     // console.log(data);
@@ -81,6 +93,12 @@ const CategoriesPage: NextPageWithLayout = () => {
     setCategoryToDelete(categoryId);
   };
 
+  const handleConfirmDeleteCategory = () => {
+    if (!categoryToDelete) return;
+    deleteCategoryById({
+      categoryId: categoryToDelete,
+    });
+  };
   return (
     <>
       <DashboardHeader>
@@ -134,6 +152,7 @@ const CategoriesPage: NextPageWithLayout = () => {
               key={category.id}
               name={category.name}
               productCount={category.productCount}
+              onDelete={() => handleClickDeleteCategory(category.id)}
             />
           );
         })}
@@ -183,7 +202,9 @@ const CategoriesPage: NextPageWithLayout = () => {
           </AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="destructive">Delete</Button>
+            <Button variant="destructive" onClick={handleConfirmDeleteCategory}>
+              Delete
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
