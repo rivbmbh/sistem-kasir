@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
+  AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import { ProductForm } from "@/components/shared/product/ProductForm";
 import { Form } from "@/components/ui/form";
@@ -32,6 +33,7 @@ const ProductsPage: NextPageWithLayout = () => {
   const [uploadedCreateProductImageUrl, setUploadedCreateProductImageUrl] =
     useState<string | null>(null);
   const [createProductDialogOpen, setCreateProductDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const { data: products } = api.product.getProducts.useQuery();
 
@@ -61,6 +63,26 @@ const ProductsPage: NextPageWithLayout = () => {
       price: values.price,
       categoryId: values.categoryId,
       imageUrl: uploadedCreateProductImageUrl,
+    });
+  };
+
+  const { mutate: deleteProductById } =
+    api.product.deleteProductById.useMutation({
+      onSuccess: async () => {
+        await apiUtils.product.getProducts.invalidate(); //show new data at view
+
+        alert("Successfully deleted a product"); //add alert success
+        setProductToDelete(null); //close modal form add
+      },
+    });
+
+  const handleClickDeleteProduct = (productId: string) => {
+    setProductToDelete(productId);
+  };
+  const handleConfirmDeleteProduct = () => {
+    if (!productToDelete) return;
+    deleteProductById({
+      productId: productToDelete,
     });
   };
 
@@ -122,10 +144,37 @@ const ProductsPage: NextPageWithLayout = () => {
               price={product.price}
               image={product.imageUrl ?? ""}
               category={product.category.name}
+              onDelete={() => handleClickDeleteProduct(product.id)}
             />
           );
         })}
       </div>
+
+      {/* delete alert */}
+      <AlertDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setProductToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Are you sure you want to delete this product? This action cannot be
+            undone.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="destructive" onClick={handleConfirmDeleteProduct}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
