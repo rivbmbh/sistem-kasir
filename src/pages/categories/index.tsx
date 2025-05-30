@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { CATEGORIES, type Category } from "@/data/mock";
+// import { CATEGORIES, type Category } from "@/data/mock";
 import { categoryFormSchema, type CategoryFormSchema } from "@/forms/category";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ReactElement } from "react";
@@ -73,7 +73,7 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate: editCategory } = api.category.editCategory.useMutation({
     onSuccess: async () => {
       await apiUtils.category.getCategories.invalidate(); //show new data at view
--
+
       alert("Successfully updated a category"); //add alert success
       editCategoryForm.reset();
       setCategoryToEdit(null);

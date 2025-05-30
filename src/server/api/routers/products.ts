@@ -1,4 +1,10 @@
+import { z } from "zod";
+// import { supabaseAdmin } from "@/server/supabase-admin";
+// import { Bucket } from "@/server/bucket";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { supabaseAdmin } from "@/server/supabase-admin";
+import { Bucket } from "@/server/bucket";
 
 export const productRouter = createTRPCRouter({
   //read
@@ -21,52 +27,58 @@ export const productRouter = createTRPCRouter({
     return products;
   }),
 
-  //insert
-  createCategory: protectedProcedure
+  createProduct: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(3, "Minimun 3 of character"),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
-      const newCategory = await db.category.create({
-        data: {
-          name: input.name,
-        },
-      });
-      return newCategory;
-    }),
-
-  //delete
-  deleteCategoryById: protectedProcedure
-    .input(z.object({ categoryId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
-      await db.category.delete({
-        where: {
-          id: input.categoryId,
-        },
-      });
-    }),
-
-  //update
-  editCategory: protectedProcedure
-    .input(
-      z.object({
+        name: z.string().min(3),
+        price: z.number().min(1000),
         categoryId: z.string(),
-        name: z.string().min(3, "Minimun of 3 character"),
+        // multipart/form-data | JSON
+        imageUrl: z.string().url(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
-      await db.category.update({
-        where: {
-          id: input.categoryId,
-        },
+
+      const newProduct = await db.product.create({
         data: {
           name: input.name,
+          price: input.price,
+          category: {
+            connect: {
+              id: input.categoryId,
+            },
+          },
+          imageUrl: input.imageUrl,
         },
       });
+
+      return newProduct;
     }),
+
+  createProductImageUploadSignedUrl: protectedProcedure.mutation(async () => {
+    const { data, error } = await supabaseAdmin.storage
+      .from(Bucket.ProductImages)
+      .createSignedUploadUrl(`${Date.now()}.jpeg`);
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error.message,
+      });
+    }
+
+    return data;
+  }),
+
+  // deleteProductById: protectedProcedure
+  //   .input(z.object({ productId: z.string() }))
+  //   .mutation(async ({ ctx, input }) => {
+  //     const { db } = ctx;
+  //     await db.product.delete({
+  //       where: {
+  //         id: input.productId,
+  //       },
+  //     });
+  //   }),
 });
