@@ -42,6 +42,7 @@ const ProductsPage: NextPageWithLayout = () => {
       await apiUtils.product.getProducts.invalidate();
 
       alert("Successfully created new product");
+      createProductForm.reset();
       setCreateProductDialogOpen(false);
     },
   });

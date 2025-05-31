@@ -14,12 +14,13 @@ import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import type { NextPageWithLayout } from "../_app";
 import { Button } from "@/components/ui/button";
+import { api } from "@/utils/api";
 
 const DashboardPage: NextPageWithLayout = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [orderSheetOpen, setOrderSheetOpen] = useState(false);
-
+  const {} = api.product.getProducts.useQuery();
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
