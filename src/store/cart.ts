@@ -21,13 +21,27 @@ export const useCartStore = create<CartState>()((set) => ({
     // alert(newItem.name);
     set((currentState) => {
       const duplicateItems = [...currentState.items];
-      duplicateItems.push({
-        productId: newItem.productId,
-        name: newItem.name,
-        imageUrl: newItem.imageUrl,
-        price: newItem.price,
-        quantity: 1,
-      });
+      const existingItemIndex = duplicateItems.findIndex(
+        (item) => item.productId === newItem.productId,
+      );
+
+      if (existingItemIndex === -1) {
+        duplicateItems.push({
+          productId: newItem.productId,
+          name: newItem.name,
+          imageUrl: newItem.imageUrl,
+          price: newItem.price,
+          quantity: 1,
+        });
+      } else {
+        const itemToUpdate = duplicateItems[existingItemIndex];
+        if (!itemToUpdate)
+          return {
+            ...currentState,
+          };
+        itemToUpdate.quantity += 1;
+      }
+
       return {
         ...currentState,
         items: duplicateItems,
