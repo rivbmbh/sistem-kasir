@@ -22,6 +22,8 @@ import {
 } from "../ui/sheet";
 import { PaymentQRCode } from "./PaymentQrCode";
 import { useCartStore } from "@/store/cart";
+import { OrderCard } from "../OrderCard";
+import { api } from "@/utils/api";
 
 type OrderItemProps = {
   id: string;
@@ -87,17 +89,37 @@ export const CreateOrderSheet = ({
   const [paymentInfoLoading, setPaymentInfoLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  const subtotal = 100000;
-  const tax = useMemo(() => subtotal * 0.17, [subtotal]);
+  const subtotal = cartStore.items.reduce((a, b) => {
+    return a + b.price * b.quantity;
+  }, 0);
+  const tax = useMemo(() => subtotal * 0.1, [subtotal]);
   const grandTotal = useMemo(() => subtotal + tax, [subtotal, tax]);
 
-  const handleCreateOrder = () => {
-    setPaymentDialogOpen(true);
-    setPaymentInfoLoading(true);
+  const { mutate: createOrder, data: createOrderResponse } =
+    api.order.createOrder.useMutation({
+      onSuccess: () => {
+        alert("Created order");
 
-    setTimeout(() => {
-      setPaymentInfoLoading(false);
-    }, 3000);
+        setPaymentDialogOpen(true);
+      },
+    });
+
+  const handleCreateOrder = () => {
+    createOrder({
+      orderItems: cartStore.items.map((item) => {
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+        };
+      }),
+    });
+
+    // setPaymentDialogOpen(true);
+    // setPaymentInfoLoading(true);
+
+    // setTimeout(() => {
+    //   setPaymentInfoLoading(false);
+    // }, 3000);
   };
 
   const handleRefresh = () => {
@@ -179,15 +201,19 @@ export const CreateOrderSheet = ({
                 </Button>
 
                 {!paymentSuccess ? (
-                  <PaymentQRCode qrString="qr-string" />
+                  <PaymentQRCode
+                    qrString={createOrderResponse?.qrString ?? ""}
+                  />
                 ) : (
                   <CheckCircle2 className="size-80 text-green-500" />
                 )}
 
-                <p className="text-3xl font-medium">{toRupiah(grandTotal)}</p>
+                <p className="text-3xl font-medium">
+                  {toRupiah(createOrderResponse?.order.grandTotal ?? 0)}
+                </p>
 
                 <p className="text-muted-foreground text-sm">
-                  Transaction ID: 1234567890
+                  Transaction ID: {createOrderResponse?.order.id}
                 </p>
               </>
             )}

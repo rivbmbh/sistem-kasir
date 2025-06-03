@@ -7,22 +7,25 @@ import {
 import { CategoryFilterCard } from "@/components/shared/category/CategoryFilterCard";
 import { CreateOrderSheet } from "@/components/shared/CreateOrderSheet";
 import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CATEGORIES, PRODUCTS } from "@/data/mock";
+import { CATEGORIES } from "@/data/mock";
+import { api } from "@/utils/api";
 import { Search, ShoppingCart } from "lucide-react";
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { NextPageWithLayout } from "../_app";
-import { Button } from "@/components/ui/button";
-import { api } from "@/utils/api";
 import { useCartStore } from "@/store/cart";
 
 const DashboardPage: NextPageWithLayout = () => {
   const cartStore = useCartStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [orderSheetOpen, setOrderSheetOpen] = useState(false);
+
   const { data: products } = api.product.getProducts.useQuery();
+
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
@@ -53,6 +56,7 @@ const DashboardPage: NextPageWithLayout = () => {
               Welcome to your Simple POS system dashboard.
             </DashboardDescription>
           </div>
+
           {!!cartStore.items.length && (
             <Button
               className="animate-in slide-in-from-right"
