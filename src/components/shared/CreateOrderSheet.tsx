@@ -105,6 +105,10 @@ export const CreateOrderSheet = ({
     });
 
   const handleCreateOrder = () => {
+    if (grandTotal > 10_000_000) {
+      alert("Total pembayaran melebihi batas maksimum QRIS (Rp10.000.000).");
+      return; // hentikan eksekusi jika melebihi batas
+    }
     createOrder({
       orderItems: cartStore.items.map((item) => {
         return {

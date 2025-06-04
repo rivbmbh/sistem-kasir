@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { createQRIS } from "@/server/xendit";
+import { TRPCError } from "@trpc/server"; // Tambahkan ini di atas jika belum ada
 import { addMinutes } from "date-fns";
 
 export const orderRouter = createTRPCRouter({
@@ -42,6 +43,16 @@ export const orderRouter = createTRPCRouter({
 
       const tax = subtotal * 0.1;
       const grandTotal = subtotal + tax;
+
+      // Tambahkan validasi di sini
+      if (grandTotal > 10_000_000) {
+        // alert("Total pembayaran melebihi batas maksimum QRIS (Rp10.000.000).");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Total pembayaran melebihi batas maksimum QRIS (Rp10.000.000).",
+        });
+      }
 
       const order = await db.order.create({
         data: {
