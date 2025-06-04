@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 type CartItem = {
   productId: string;
   name: string;
@@ -7,7 +8,6 @@ type CartItem = {
   imageUrl: string;
 };
 
-//type sama dengan CartItem cuma hanya tidak ada qty
 type AddToCartItem = Omit<CartItem, "quantity">;
 
 interface CartState {
@@ -18,13 +18,17 @@ interface CartState {
 export const useCartStore = create<CartState>()((set) => ({
   items: [],
   addToCart: (newItem) => {
-    // alert(newItem.name);
+    // 1. kalo item belom ada di cart, push item ke cart dengan quantity 1
+    // 2. kalo item udah ada di cart, modify quantity dengan tambah 1
     set((currentState) => {
-      const duplicateItems = [...currentState.items];
+      // State = immutable -> gaboleh value-nya diubah secara langsung
+      const duplicateItems = [...currentState.items]; // duplikat isi items ke array baru
+
       const existingItemIndex = duplicateItems.findIndex(
         (item) => item.productId === newItem.productId,
       );
 
+      // Kalau item belom ada di cart
       if (existingItemIndex === -1) {
         duplicateItems.push({
           productId: newItem.productId,
@@ -35,10 +39,12 @@ export const useCartStore = create<CartState>()((set) => ({
         });
       } else {
         const itemToUpdate = duplicateItems[existingItemIndex];
+
         if (!itemToUpdate)
           return {
             ...currentState,
           };
+
         itemToUpdate.quantity += 1;
       }
 
