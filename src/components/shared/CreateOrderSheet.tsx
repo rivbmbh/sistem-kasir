@@ -98,17 +98,25 @@ export const CreateOrderSheet = ({
   const { mutate: createOrder, data: createOrderResponse } =
     api.order.createOrder.useMutation({
       onSuccess: () => {
-        alert("Created order");
+        // alert("Created order");
 
         setPaymentDialogOpen(true);
       },
     });
 
+  const { mutate: simulatePayment } = api.order.simulatePayment.useMutation({
+    onSuccess: () => {
+      alert("Simulated Payment");
+    },
+  });
+
   const handleCreateOrder = () => {
+    //cek jika grantotal lebih dari 10jt
     if (grandTotal > 10_000_000) {
       alert("Total pembayaran melebihi batas maksimum QRIS (Rp10.000.000).");
       return; // hentikan eksekusi jika melebihi batas
     }
+
     createOrder({
       orderItems: cartStore.items.map((item) => {
         return {
@@ -128,6 +136,13 @@ export const CreateOrderSheet = ({
 
   const handleRefresh = () => {
     setPaymentSuccess(true);
+  };
+
+  const handleSimulatePayment = () => {
+    if (!createOrderResponse) return;
+    simulatePayment({
+      orderId: createOrderResponse?.order.id,
+    });
   };
 
   return (
@@ -219,6 +234,10 @@ export const CreateOrderSheet = ({
                 <p className="text-muted-foreground text-sm">
                   Transaction ID: {createOrderResponse?.order.id}
                 </p>
+
+                <Button onClick={handleSimulatePayment} variant="link">
+                  Simulate Payment
+                </Button>
               </>
             )}
           </div>
