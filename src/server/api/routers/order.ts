@@ -133,4 +133,29 @@ export const orderRouter = createTRPCRouter({
         },
       });
     }),
+
+  checkOrderPaymentStatus: protectedProcedure
+    .input(
+      z.object({
+        orderId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const order = await db.order.findUnique({
+        where: {
+          id: input.orderId,
+        },
+        select: {
+          paidAt: true,
+          status: true,
+        },
+      });
+
+      if (!order?.paidAt) {
+        return false;
+      }
+      return true;
+    }),
 });
