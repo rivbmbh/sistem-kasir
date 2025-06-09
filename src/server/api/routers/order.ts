@@ -3,7 +3,8 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { createQRIS, xenditPaymentMethodClient } from "@/server/xendit";
 import { TRPCError } from "@trpc/server"; // Tambahkan ini di atas jika belum ada
 import { getTraceEvents } from "next/dist/trace";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Prisma } from "@prisma/client";
+import { tree } from "next/dist/build/templates/app-page";
 // import { addMinutes } from "date-fns";
 
 export const orderRouter = createTRPCRouter({
@@ -167,10 +168,25 @@ export const orderRouter = createTRPCRouter({
         status: z.enum(["ALL", ...Object.keys(OrderStatus)]).default("ALL"),
       }),
     )
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx, input }) => {
       const { db } = ctx;
 
+      const whereClause: Prisma.OrderWhereInput = {};
+
+      switch (input.status) {
+        case OrderStatus.AWAITING_PAYMENT:
+          whereClause.status = OrderStatus.AWAITING_PAYMENT;
+          break;
+        case OrderStatus.PROCESSING:
+          whereClause.status = OrderStatus.PROCESSING;
+          break;
+        case OrderStatus.DONE:
+          whereClause.status = OrderStatus.DONE;
+          break;
+      }
+
       const orders = await db.order.findMany({
+        where: whereClause,
         select: {
           id: true,
           grandTotal: true,
@@ -184,5 +200,56 @@ export const orderRouter = createTRPCRouter({
         },
       });
       return orders;
+    }),
+
+  finishOrder: protectedProcedure
+    .input(
+      z.object({
+        orderId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const order = await db.order.findUnique({
+        where: {
+          id: input.orderId,
+        },
+        select: {
+          paidAt: true,
+          status: true,
+          id: true,
+        },
+      });
+
+      if (!order) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "order not found",
+        });
+      }
+
+      if (!order.paidAt) {
+        throw new TRPCError({
+          code: "UNPROCESSABLE_CONTENT",
+          message: "order is not paid yet",
+        });
+      }
+
+      if (order.status !== OrderStatus.PROCESSING) {
+        throw new TRPCError({
+          code: "UNPROCESSABLE_CONTENT",
+          message: "order is not processing yet",
+        });
+      }
+
+      await db.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          status: OrderStatus.DONE,
+        },
+      });
     }),
 });

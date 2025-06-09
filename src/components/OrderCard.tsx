@@ -9,6 +9,7 @@ interface OrderCardProps {
   totalItems: number;
   status: OrderStatus;
   onFinishOrder?: (orderId: string) => void;
+  isFinishingOrder?: boolean;
 }
 
 export const OrderCard = ({
@@ -17,8 +18,8 @@ export const OrderCard = ({
   totalAmount,
   totalItems,
   onFinishOrder,
+  isFinishingOrder,
 }: OrderCardProps) => {
-  const handleFinishOrder = () => {};
   const getBadgeColor = () => {
     switch (status) {
       case OrderStatus.AWAITING_PAYMENT:
@@ -62,8 +63,17 @@ export const OrderCard = ({
       </div>
 
       {status === OrderStatus.PROCESSING && (
-        <Button onClick={handleFinishOrder} className="w-full" size="sm">
-          Finish Order
+        <Button
+          onClick={() => {
+            if (onFinishOrder) {
+              onFinishOrder(id);
+            }
+          }}
+          className="w-full"
+          size="sm"
+          disabled={isFinishingOrder}
+        >
+          {isFinishingOrder ? "Processing..." : "Finish Order"}
         </Button>
       )}
     </div>

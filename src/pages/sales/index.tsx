@@ -19,12 +19,29 @@ import { SelectValue } from "@radix-ui/react-select";
 import { OrderStatus } from "@prisma/client";
 
 const SalesPage: NextPageWithLayout = () => {
+  const apiUtils = api.useUtils();
+
   const [filterOrder, setFilterOrder] = useState<OrderStatus | "ALL">("ALL");
   const { data: orders } = api.order.getOrders.useQuery({
     status: filterOrder,
   });
 
-  const handleFinishOrder = (orderId: string) => {};
+  const {
+    mutate: finishOrder,
+    isPending: finishOrderIsPending,
+    variables: finishOrderVariables,
+  } = api.order.finishOrder.useMutation({
+    onSuccess: async () => {
+      await apiUtils.order.getOrders.invalidate();
+      alert("Finished order");
+    },
+  });
+
+  const handleFinishOrder = (orderId: string) => {
+    finishOrder({
+      orderId,
+    });
+  };
 
   const handleFilterOrderChange = (value: OrderStatus | "ALL") => {
     setFilterOrder(value);
@@ -88,6 +105,10 @@ const SalesPage: NextPageWithLayout = () => {
               status={order.status}
               totalAmount={order.grandTotal}
               totalItems={order._count.orderItems}
+              isFinishingOrder={
+                finishOrderIsPending &&
+                order.id === finishOrderVariables.orderId
+              }
             />
           ))}
         </div>
