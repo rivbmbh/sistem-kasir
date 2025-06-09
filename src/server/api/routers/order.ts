@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { createQRIS, xenditPaymentMethodClient } from "@/server/xendit";
 import { TRPCError } from "@trpc/server"; // Tambahkan ini di atas jika belum ada
+import { getTraceEvents } from "next/dist/trace";
+import { OrderStatus } from "@prisma/client";
 // import { addMinutes } from "date-fns";
 
 export const orderRouter = createTRPCRouter({
@@ -157,5 +159,30 @@ export const orderRouter = createTRPCRouter({
         return false;
       }
       return true;
+    }),
+
+  getOrders: protectedProcedure
+    .input(
+      z.object({
+        status: z.enum(["ALL", ...Object.keys(OrderStatus)]).default("ALL"),
+      }),
+    )
+    .query(async ({ ctx }) => {
+      const { db } = ctx;
+
+      const orders = await db.order.findMany({
+        select: {
+          id: true,
+          grandTotal: true,
+          status: true,
+          paidAt: true,
+          _count: {
+            select: {
+              orderItems: true,
+            },
+          },
+        },
+      });
+      return orders;
     }),
 });

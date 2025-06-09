@@ -4,59 +4,30 @@ import {
   DashboardLayout,
   DashboardTitle,
 } from "@/components/layouts/DashboardLayout";
-import { OrderCard, type Order } from "@/components/OrderCard";
+import { OrderCard } from "@/components/OrderCard";
 import type { NextPageWithLayout } from "../_app";
 import type { ReactElement } from "react";
 import { useState } from "react";
+import { api } from "@/utils/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { SelectValue } from "@radix-ui/react-select";
+import { OrderStatus } from "@prisma/client";
 
 const SalesPage: NextPageWithLayout = () => {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD-001",
-      totalAmount: 45.99,
-      totalItems: 3,
-      status: "Processing"
-    },
-    {
-      id: "ORD-002",
-      totalAmount: 23.50,
-      totalItems: 2,
-      status: "Finished"
-    },
-    {
-      id: "ORD-003",
-      totalAmount: 67.25,
-      totalItems: 5,
-      status: "Processing"
-    },
-    {
-      id: "ORD-004",
-      totalAmount: 12.99,
-      totalItems: 1,
-      status: "Finished"
-    },
-    {
-      id: "ORD-005",
-      totalAmount: 89.75,
-      totalItems: 7,
-      status: "Processing"
-    },
-    {
-      id: "ORD-006",
-      totalAmount: 34.20,
-      totalItems: 4,
-      status: "Finished"
-    }
-  ]);
+  const [filterOrder, setFilterOrder] = useState<OrderStatus | "ALL">("ALL");
+  const { data: orders } = api.order.getOrders.useQuery({
+    status: filterOrder,
+  });
 
-  const handleFinishOrder = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId
-          ? { ...order, status: "Finished" as const }
-          : order
-      )
-    );
+  const handleFinishOrder = (orderId: string) => {};
+
+  const handleFilterOrderChange = (value: OrderStatus | "ALL") => {
+    setFilterOrder(value);
   };
 
   return (
@@ -68,7 +39,7 @@ const SalesPage: NextPageWithLayout = () => {
         </DashboardDescription>
       </DashboardHeader>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+      <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border p-4 shadow-sm">
           <h3 className="text-lg font-medium">Total Revenue</h3>
           <p className="mt-2 text-3xl font-bold">$0.00</p>
@@ -86,14 +57,37 @@ const SalesPage: NextPageWithLayout = () => {
       </div>
 
       <div className="rounded-lg border p-6">
-        <h3 className="text-lg font-medium mb-4">Orders</h3>
-        
+        <div className="flex justify-between">
+          <h3 className="mb-4 text-lg font-medium">Orders</h3>
+
+          <Select defaultValue="ALL" onValueChange={handleFilterOrderChange}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+
+            <SelectContent align="end">
+              <SelectItem value="ALL">ALL</SelectItem>
+              {Object.keys(OrderStatus).map((orderStatus) => {
+                return (
+                  <SelectItem key={orderStatus} value={orderStatus}>
+                    {/* @ts-expect-error will fix type later */}
+                    {OrderStatus[orderStatus]}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {orders.map((order) => (
+          {orders?.map((order) => (
             <OrderCard
               key={order.id}
-              order={order}
               onFinishOrder={handleFinishOrder}
+              id={order.id}
+              status={order.status}
+              totalAmount={order.grandTotal}
+              totalItems={order._count.orderItems}
             />
           ))}
         </div>
@@ -106,4 +100,4 @@ SalesPage.getLayout = (page: ReactElement) => {
   return <DashboardLayout>{page}</DashboardLayout>;
 };
 
-export default SalesPage; 
+export default SalesPage;
