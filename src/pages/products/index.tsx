@@ -26,6 +26,7 @@ import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { productFormSchema, type ProductFormSchema } from "@/forms/product";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 const ProductsPage: NextPageWithLayout = () => {
   const apiUtils = api.useUtils();
@@ -35,13 +36,15 @@ const ProductsPage: NextPageWithLayout = () => {
   const [createProductDialogOpen, setCreateProductDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
-  const { data: products } = api.product.getProducts.useQuery();
+  const { data: products } = api.product.getProducts.useQuery({
+    categoryId: "all",
+  });
 
   const { mutate: createProduct } = api.product.createProduct.useMutation({
     onSuccess: async () => {
       await apiUtils.product.getProducts.invalidate();
 
-      alert("Successfully created new product");
+      toast("Successfully created new product");
       createProductForm.reset();
       setCreateProductDialogOpen(false);
     },
@@ -55,7 +58,7 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const handleSubmitCreateProduct = (values: ProductFormSchema) => {
     if (!uploadedCreateProductImageUrl) {
-      alert("Please upload a product image first");
+      toast("Please upload a product image first");
       return;
     }
 
@@ -72,7 +75,7 @@ const ProductsPage: NextPageWithLayout = () => {
       onSuccess: async () => {
         await apiUtils.product.getProducts.invalidate(); //show new data at view
 
-        alert("Successfully deleted a product"); //add alert success
+        toast("Successfully deleted a product"); //add alert success
         setProductToDelete(null); //close modal form add
       },
     });

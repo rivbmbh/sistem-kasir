@@ -16,6 +16,7 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import type { NextPageWithLayout } from "../_app";
 import { useCartStore } from "@/store/cart";
+import { toast } from "sonner";
 
 const DashboardPage: NextPageWithLayout = () => {
   const cartStore = useCartStore();
@@ -31,12 +32,15 @@ const DashboardPage: NextPageWithLayout = () => {
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
+  const totalProduct = categories?.reduce((a, b) => {
+    return a + b._count.products;
+  }, 0);
 
   const handleAddToCart = (productId: string) => {
     const productToAdd = products?.find((product) => product.id === productId);
 
     if (!productToAdd) {
-      alert("Product not found");
+      toast("Product not found");
       return;
     }
 
@@ -87,7 +91,7 @@ const DashboardPage: NextPageWithLayout = () => {
             name="All"
             isSelected={selectedCategory === "all"}
             onClick={() => handleCategoryClick("all")}
-            productCount={0}
+            productCount={totalProduct ?? 0}
           />
           {categories?.map((category) => (
             <CategoryFilterCard

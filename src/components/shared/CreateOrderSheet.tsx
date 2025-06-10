@@ -25,6 +25,7 @@ import { useCartStore } from "@/store/cart";
 import { OrderCard } from "../OrderCard";
 import { api } from "@/utils/api";
 import { idText } from "typescript";
+import { toast } from "sonner";
 
 type OrderItemProps = {
   id: string;
@@ -99,7 +100,7 @@ export const CreateOrderSheet = ({
   const { mutate: createOrder, data: createOrderResponse } =
     api.order.createOrder.useMutation({
       onSuccess: () => {
-        // alert("Created order");
+        toast("Created order");
 
         setPaymentDialogOpen(true);
       },
@@ -107,7 +108,7 @@ export const CreateOrderSheet = ({
 
   const { mutate: simulatePayment } = api.order.simulatePayment.useMutation({
     onSuccess: () => {
-      alert("Simulated Payment");
+      toast("Simulated Payment");
     },
   });
 
@@ -128,7 +129,7 @@ export const CreateOrderSheet = ({
   const handleCreateOrder = () => {
     //cek jika grantotal lebih dari 10jt
     if (grandTotal > 10_000_000) {
-      alert("Total pembayaran melebihi batas maksimum QRIS (Rp10.000.000).");
+      toast("Total pembayaran melebihi batas maksimum QRIS (Rp10.000.000).");
       return; // hentikan eksekusi jika melebihi batas
     }
 

@@ -18,6 +18,7 @@ import {
 import { SelectValue } from "@radix-ui/react-select";
 import { OrderStatus } from "@prisma/client";
 import { toRupiah } from "@/utils/toRupiah";
+import { toast } from "sonner";
 
 const SalesPage: NextPageWithLayout = () => {
   const apiUtils = api.useUtils();
@@ -36,7 +37,7 @@ const SalesPage: NextPageWithLayout = () => {
   } = api.order.finishOrder.useMutation({
     onSuccess: async () => {
       await apiUtils.order.getOrders.invalidate();
-      alert("Finished order");
+      toast("Finished order");
     },
   });
 
