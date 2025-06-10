@@ -9,7 +9,7 @@ import { CreateOrderSheet } from "@/components/shared/CreateOrderSheet";
 import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CATEGORIES } from "@/data/mock";
+// import { CATEGORIES } from "@/data/mock";
 import { api } from "@/utils/api";
 import { Search, ShoppingCart } from "lucide-react";
 import type { ReactElement } from "react";
@@ -24,8 +24,10 @@ const DashboardPage: NextPageWithLayout = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [orderSheetOpen, setOrderSheetOpen] = useState(false);
 
-  const { data: products } = api.product.getProducts.useQuery();
-
+  const { data: products } = api.product.getProducts.useQuery({
+    categoryId: selectedCategory,
+  });
+  const { data: categories } = api.category.getCategories.useQuery();
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
@@ -80,12 +82,19 @@ const DashboardPage: NextPageWithLayout = () => {
         </div>
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
-          {CATEGORIES.map((category) => (
+          <CategoryFilterCard
+            key="all"
+            name="All"
+            isSelected={selectedCategory === "all"}
+            onClick={() => handleCategoryClick("all")}
+            productCount={0}
+          />
+          {categories?.map((category) => (
             <CategoryFilterCard
               key={category.id}
               name={category.name}
-              productCount={category.productCount}
-              isSelected={selectedCategory === category.id}
+              productCount={category._count.products}
+              isSelected={category.id === selectedCategory}
               onClick={() => handleCategoryClick(category.id)}
             />
           ))}
